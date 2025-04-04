@@ -84,6 +84,11 @@ cbrain users create
 cbrain users show USER_ID
 ```
 - Displays detailed information for a specific user
+- 
+### Demo use :
+![cbrain](https://github.com/user-attachments/assets/d40c92e0-a8e8-4880-8d1c-8ebfbca64890)
+
+
 
 ## Configuration
 
