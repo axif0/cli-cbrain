@@ -33,6 +33,7 @@ source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 3. Install the package:
 ```bash
 pip install -r requirements.txt
+pip install .
 ```
 
 ## Usage
