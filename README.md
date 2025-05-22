@@ -9,7 +9,9 @@ CBRAIN CLI is a command-line interface for interacting with the CBRAIN platform,
 - User authentication (login/logout)
 - User management (create, list, show users)
 - Session status checking
-
+  
+### Demo use :
+![cbrain](https://github.com/user-attachments/assets/d40c92e0-a8e8-4880-8d1c-8ebfbca64890)
 ## Prerequisites
 
 - Python 3.10+
@@ -84,9 +86,7 @@ cbrain users create
 cbrain users show USER_ID
 ```
 - Displays detailed information for a specific user
-  
-### Demo use :
-![cbrain](https://github.com/user-attachments/assets/d40c92e0-a8e8-4880-8d1c-8ebfbca64890)
+
 
 
 
