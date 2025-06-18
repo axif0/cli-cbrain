@@ -4,7 +4,7 @@ import urllib.parse
 import urllib.error
 import getpass
 from cbrain_cli.config import (
-    DEFAULT_BASE_URL, SESSION_FILE_DIR, SESSION_FILE_NAME, DEFAULT_HEADERS, auth_headers
+    DEFAULT_BASE_URL, CREDENTIALS_FILE, DEFAULT_HEADERS, auth_headers
 )
 
 # MARK: Create Session.
@@ -17,8 +17,8 @@ def create_session(args):
     None
         A command is ran via inputs from the user.
     """
-    credentials_file = SESSION_FILE_DIR / SESSION_FILE_NAME
-    if credentials_file.exists():
+    
+    if CREDENTIALS_FILE.exists():
         print("Already logged in. Use 'cbrain logout' to logout.")
         return 1
      
@@ -78,10 +78,10 @@ def create_session(args):
         }
         
         # Save credentials to file.
-        with open(credentials_file, 'w') as f:
+        with open(CREDENTIALS_FILE, 'w') as f:
             json.dump(credentials, f, indent=2)
             
-        print(f"Connection successful, API token saved in {credentials_file}")
+        print(f"Connection successful, API token saved in {CREDENTIALS_FILE}")
         return 0
 
 # MARK: Logout
@@ -94,15 +94,14 @@ def logout_session(args):
     None
         A command is ran via inputs from the user.
     """
-    credentials_file = SESSION_FILE_DIR / SESSION_FILE_NAME
-    
+
     # Check if already logged out.
-    if not credentials_file.exists():
+    if not CREDENTIALS_FILE.exists():
         print("Not logged in.")
         return 1
     
     # Read credentials to get API token and URL.
-    with open(credentials_file, 'r') as f:
+    with open(CREDENTIALS_FILE, 'r') as f:
         credentials = json.load(f)
     
     cbrain_url = credentials.get('cbrain_url')
@@ -110,7 +109,7 @@ def logout_session(args):
     
     if not cbrain_url or not api_token:
         print("Invalid credentials file. Removing local session.")
-        credentials_file.unlink()
+        CREDENTIALS_FILE.unlink()
         return 0
     
     # Prepare logout request.
@@ -135,8 +134,8 @@ def logout_session(args):
             print("Logout failed")
     
     # Always remove local credentials file.
-    credentials_file.unlink()
-    print(f"Local session removed from {credentials_file}")
+    CREDENTIALS_FILE.unlink()
+    print(f"Local session removed from {CREDENTIALS_FILE}")
     return 0
 
 

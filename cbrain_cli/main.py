@@ -5,11 +5,12 @@ Setup and commands for the CBRAIN CLI command line interface.
 import argparse
 import sys
 
-from cbrain_cli.cli_utils import handle_errors, is_authenticated
+from cbrain_cli.cli_utils import handle_errors 
 from cbrain_cli.sessions import (
     create_session,
     logout_session
 )
+from cbrain_cli.version import whoami_user
 
 def main():
     """
@@ -33,7 +34,9 @@ def main():
     logout_parser.set_defaults(func=handle_errors(logout_session))
 
     # Show current session.
-    subparsers.add_parser('whoami', help='Show current session')
+    whoami_parser = subparsers.add_parser('whoami', help='Show current session')
+    whoami_parser.add_argument('-v', '--version', action='store_true', help='Show version')
+    whoami_parser.set_defaults(func=handle_errors(whoami_user))
 
     # MARK: Setup CLI
     args = parser.parse_args()
@@ -47,16 +50,10 @@ def main():
     elif args.command == 'logout':
         return handle_errors(logout_session)(args) 
     elif args.command == 'whoami':
-        credentials = is_authenticated()
-        if credentials:
-            print(f"Currently logged in as {credentials.get('user_id')} on server {credentials.get('cbrain_url')}")
-        else:
-            print("Not logged in. Please login with 'cbrain login'.")
-            return 1
+        return handle_errors(whoami_user)(args)
 
     if hasattr(args, 'func'):
         return args.func(args)
- 
 
 if __name__ == '__main__':
     sys.exit(main()) 

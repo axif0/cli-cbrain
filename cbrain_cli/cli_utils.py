@@ -2,9 +2,21 @@ import json
 import urllib.error
 import functools
 
-from build.lib.cbrain_cli.config import SESSION_FILE_DIR
-from cbrain_cli.config import SESSION_FILE_NAME
+from cbrain_cli.config import CREDENTIALS_FILE
 
+try:
+    # MARK: Credentials.
+    with open(CREDENTIALS_FILE, 'r') as f:
+        credentials = json.load(f) 
+
+    # Get credentials.
+    cbrain_url = credentials.get('cbrain_url')
+    api_token = credentials.get('api_token')
+    user_id = credentials.get('user_id')
+except FileNotFoundError:
+    cbrain_url = None
+    api_token = None
+    user_id = None
 
 def handle_errors(func):
     """
@@ -38,20 +50,3 @@ def handle_errors(func):
             return 1
     return wrapper
 
-def is_authenticated():
-    """
-    Check if the user is authenticated.
-
-    Returns
-    -------
-    dict
-        The credentials of the user.
-    """
-    credentials_file = SESSION_FILE_DIR / SESSION_FILE_NAME
-    if not credentials_file.exists():
-        return None
-    
-    with open(credentials_file, 'r') as f:
-        credentials = json.load(f)
-    
-    return credentials
