@@ -1,102 +1,84 @@
-import os
 import json
-import requests
-from pathlib import Path
+import urllib.request
+import urllib.parse
+import urllib.error
+import getpass
+from cbrain_cli.config import (
+    DEFAULT_BASE_URL, SESSION_FILE_DIR, SESSION_FILE_NAME, DEFAULT_HEADERS
+)
 
-class CBRAINSession:
-    def __init__(self, base_url="http://localhost:3000"):
-        self.base_url = base_url
-        self.session_file = Path.home() / ".cbrain" / "session.json"
-        self.token = None
-        self.user_id = None
-        self._load_session()
+def create_session(args):
+    """
+    Create a new CBRAIN session by logging in and saving credentials.
 
-    def _load_session(self):
-         
-        if self.session_file.exists():
-            try:
-                with open(self.session_file) as f:
-                    data = json.load(f)
-                    self.token = data.get('cbrain_api_token')
-                    self.user_id = data.get('user_id')
-            except (json.JSONDecodeError, IOError) as e:
-                self.token = None
-                self.user_id = None
-        else:
-            pass
-
-    def _verify_token(self):
-       
-        if not self.token:
-            return False
-            
-        url = f"{self.base_url}/session"
-        headers = self.get_headers()
-        
-        try:
-            response = requests.get(url, headers=headers)
-            valid = response.status_code == 200
-            return valid
-        except requests.exceptions.RequestException as e:
-            return False
-
-    def _save_session(self):
-         
-        try:
-            self.session_file.parent.mkdir(exist_ok=True)
-            data = {
-                'cbrain_api_token': self.token,
-                'user_id': self.user_id
-            }
-            with open(self.session_file, 'w') as f:
-                json.dump(data, f)
-        except IOError as e:
-            pass
-
-    def login(self, username, password):
+    Returns
+    -------
+    None
+        A command is ran via inputs from the user.
+    """
+    credentials_file = SESSION_FILE_DIR / SESSION_FILE_NAME
+    if credentials_file.exists():
+        print("Already logged in. Use 'cbrain logout' to logout.")
+        return 1
      
-        url = f"{self.base_url}/session"
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-        }
-        payload = f'login={username}&password={password}'
-
-        try:
-            response = requests.post(url, headers=headers, data=payload)
-            response.raise_for_status()
-            
-            # Extract token from response body
-            data = response.json()
-            self.token = data.get('cbrain_api_token')
-            self.user_id = data.get('user_id')
-            
-            if self.token:
-                self._save_session()
-                return True
-            return False
-        except requests.exceptions.RequestException as e:
-            return False
-
-    def get_headers(self):
+    # Get user input.
+    cbrain_url = input("Enter CBRAIN server URL prefix: ").strip()
+    if not cbrain_url:
+        cbrain_url = DEFAULT_BASE_URL
         
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': f'Bearer {self.token}' if self.token else None
+    username = input("Enter CBRAIN username: ").strip()
+    if not username:
+        print("Username is required")
+        return 1
+        
+    password = getpass.getpass("Enter CBRAIN password: ")
+    if not password:
+        print("Password is required")
+        return 1
+
+    # Prepare the login request.
+    login_endpoint = f"{cbrain_url}/session"
+    
+    # Prepare form data.
+    form_data = {
+        'login': username,
+        'password': password
+    }
+    
+    # Encode the form data.
+    encoded_data = urllib.parse.urlencode(form_data).encode('utf-8')
+    
+    # Create the request.
+    request = urllib.request.Request(
+        login_endpoint,
+        data=encoded_data,
+        headers=DEFAULT_HEADERS,
+        method='POST'
+    )
+    
+    # Make the request.
+    with urllib.request.urlopen(request) as response:
+        data = response.read().decode('utf-8')
+        response_data = json.loads(data)
+        
+        # Extract the API token from response.
+        cbrain_api_token = response_data.get('cbrain_api_token')  
+        cbrain_user_id = response_data.get('cbrain_user_id')
+        
+        if not cbrain_api_token:
+            print("Login failed: No API token received")
+            return 1
+            
+        # Prepare credentials data.
+        credentials = {
+            'cbrain_url': cbrain_url,
+            'api_token': cbrain_api_token,
+            'user_id': cbrain_user_id
         }
-        return headers
-
-    def is_authenticated(self):
-       
-        is_auth = bool(self.token)
-        return is_auth
-
-    def logout(self):
-        """Clear the current session."""
-        if self.session_file.exists():
-            try:
-                self.session_file.unlink()
-            except IOError as e:
-                pass
-        self.token = None
-        self.user_id = None 
+        
+        # Save credentials to file.
+        with open(credentials_file, 'w') as f:
+            json.dump(credentials, f, indent=2)
+            
+        print(f"Connection successful, API token saved in {credentials_file}")
+        return 0
