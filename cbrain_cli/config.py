@@ -18,3 +18,21 @@ DEFAULT_HEADERS = {
     'Accept': 'application/json'
 }
  
+def auth_headers(api_token):
+    """
+    Generate authorization headers with API token.
+    
+    Parameters
+    ----------
+    api_token : str
+        The API token for authorization
+        
+    Returns
+    -------
+    dict
+        Headers dictionary with authorization
+    """
+    return {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {api_token}'
+    }

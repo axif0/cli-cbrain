@@ -2,6 +2,9 @@ import json
 import urllib.error
 import functools
 
+from build.lib.cbrain_cli.config import SESSION_FILE_DIR
+from cbrain_cli.config import SESSION_FILE_NAME
+
 
 def handle_errors(func):
     """
@@ -34,3 +37,21 @@ def handle_errors(func):
             print(f"Operation failed: {str(e)}")
             return 1
     return wrapper
+
+def is_authenticated():
+    """
+    Check if the user is authenticated.
+
+    Returns
+    -------
+    dict
+        The credentials of the user.
+    """
+    credentials_file = SESSION_FILE_DIR / SESSION_FILE_NAME
+    if not credentials_file.exists():
+        return None
+    
+    with open(credentials_file, 'r') as f:
+        credentials = json.load(f)
+    
+    return credentials
